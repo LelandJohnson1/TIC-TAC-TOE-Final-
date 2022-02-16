@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+
+//HELPFUL NOTE 1- The window object represents the browser window. The document object represents the HTML document loaded in that window. The window object has many useful properties like the location object and the setTimeout function.
+const game_container=(display=()=>{
+    //Used to prevent the game from continuing when a winning condition is struck
+    let stop_game=false;
+    //Used to decide which game mode has been set
+    let game_mode_decision=null;
+    //Used for singular item storage so that item can be deleted from the games boxes array when a user confirms that they want to place an letter on a space 
+    let item_storage=[];
+    let game_boxes_arr=[];
+    const letter_switch_arr=['X','O'];
+    //Used to decide who goes first in P1 vs Computer mode
+    num=[0,1];
+    num.sort(function () {return 0.5-Math.random(); });
+
+//HELPFUL NOTE-in sort the number is returned to the function and the function sorts by that number 
+    //randomizes which letter is chosen
+    letter_switch_arr.sort(function () {return 0.5-Math.random();});
+    const box_table=document.createElement('table');
+    let box_tbody;
+    let row;
+    let row_box;
+
+    //This creates the title of the page (tic tac toe)
+    const topText_container=document.createElement('div');
+    const title=document.createElement('p');
+    topText_container.appendChild(title);
+    title.innerText='Tic Tac Toe';
+    title.setAttribute('style','text-align:center; margin-top:0.2em; margin-bottom:0.2em; font-size:5em; text-transform:Uppercase; font-family:sans-serif;');
+    //end
+    
+//HELPFUL NOTE 2- private methods start with underscores
+    //This is the default display text (Choose your game mode)
+    const displayMessage=document.createElement('div');
+    topText_container.appendChild(displayMessage);
+    displayMessage.innerText='Choose your game mode';
+    displayMessage.setAttribute('style','text-align:center; font-family:sans-serif; font-size:1.5em; margin-top:0.01em;');
+    document.body.appendChild(topText_container);
+    //end
+    
+    
+    const reset_game=()=>{
+    game_mode_decision=0;
+    game_container.item_storage=[];
+    console.log(game_boxes_arr);
+    num.sort(function () {return 0.5-Math.random(); });
+    //Erases the board
+    const eraseboard=(item)=>{item.innerHTML='';};
+    document.querySelectorAll('td').forEach(eraseboard);
+    //deletes the board
+    delete_element_tr=Array.from(document.querySelectorAll('tr'));
+    delete_element_td=Array.from(document.querySelectorAll('td'));
+    for (i=0; i<=2; i++) {
+        delete_element_tr[i].remove();
+            for (j=0; j<3; j++) {
+                delete_element_tr[j].remove();
+        }
+    }
+    //Gets rid of the dom display of boxes
+    box_table.remove();
+    box_tbody.remove();
+    row.remove();
+    row_box.remove();
+    letter_switch_arr.sort(function () {return 0.5-Math.random();});
+    displayMessage.innerText='Choose your game mode'; 
+};
+
+
+
+//This creates the Tic Tac Toe boxes
+    const box_creator=()=>{
+    box_tbody=document.createElement('tbody');
+    //K is Used to create unique id's for the individual boxes
+    let k=1;
+    for (i=0; i<3; i++) {
+        row=document.createElement('tr');
+        box_tbody.appendChild(row);
+            for (j=0; j<3; j++) {
+                row_box=document.createElement('td');
+                row_box.setAttribute('id','box'+k);
+                row_box.classList.add('box');
+                //So no double boxes are made when the reset function is called when a game mode is pressed
+                if (game_mode_decision!=null) {
+                    game_container.game_boxes_arr.push(row_box);
+                }
+                row_box.setAttribute('style', 'background-color:red; font-family:sans-serif; font-size:8em; box-sizing:border-box; padding-left:0.16em; width:128.656px; height:128.656px;');
+                row.appendChild(row_box);
+                //Used to create unique id's for the individual boxes
+                k++;
+        }   
+    }
+    console.log(game_boxes_arr);
+    box_table.appendChild(box_tbody);
+    document.body.appendChild(box_table);
+    box_table.setAttribute('style', 'width:25em; height:25em; margin-left:auto; margin-right:auto;'); 
+//Helpful Note use insertBefore to insert a dom element before another element (the document.body is the parent div that this switch is happening inside of)    
+    if (game_mode_decision==0) { 
+        document.body.insertBefore(box_table,bottom_buttons_container);
+        }  
+}
+    box_creator();
+    //end
+    
+
+//This creates the buttons (style)
+const bottom_buttons_container=document.createElement('div');
+const pone_ptwo_button=document.createElement('button');
+pone_ptwo_button.innerHTML='Two Players';
+const player_comp_button=document.createElement('button');
+player_comp_button.innerHTML='One Player';
+const reset_button=document.createElement('button');
+reset_button.innerHTML='Reset';
+
+document.body.appendChild(bottom_buttons_container);
+bottom_buttons_container.appendChild(pone_ptwo_button);
+bottom_buttons_container.appendChild(player_comp_button);
+bottom_buttons_container.appendChild(reset_button);
+
+
+bottom_buttons_container.setAttribute('style', 'text-align:center; margin-top:2em;');
+pone_ptwo_button.setAttribute('style', 'background-color:grey; margin-right:1em;');
+player_comp_button.setAttribute('style', 'background-color:grey; margin-right:1em;');
+reset_button.setAttribute('style', 'background-color:grey');
+//end
+
+
+pone_ptwo_button.addEventListener('click', function make_true() {reset_game(); 
+game_container.game_boxes_arr=[]; box_creator(); game_container.game_mode_decision=1; 
+const player1=player_interaction(game_container.letter_switch_arr[0]); 
+displayMessage.innerText='Player 1 is '+letter_switch_arr[0]+' Player 2 is '+ letter_switch_arr[1]+', '+letter_switch_arr[0]+' goes first!'; 
+console.log(game_container.game_mode_decision);});
+
+player_comp_button.addEventListener('click', function make_false() {
+    reset_game(); 
+    //START HERE
+    game_container.game_boxes_arr=[];
+    box_creator(); 
+    game_container.game_mode_decision=2;
+    //Chooses if the computer or user goes first 
+    if (num[0]==0) {
+    displayMessage.innerText='Player 1 is '+letter_switch_arr[0]+' The Computer is '+ letter_switch_arr[1]+', '+letter_switch_arr[num[0]]+' goes first!'; 
+    const player1=player_interaction(game_container.letter_switch_arr[0]); 
+    }
+    //Run comp obj code
+    else if(num[0]==1) { 
+    displayMessage.innerText='Player 1 is '+letter_switch_arr[0]+' The Computer is '+ letter_switch_arr[1]+', '+letter_switch_arr[num[0]]+' goes first!';     
+    computer_logic(); 
+    }
+    console.log(game_container.game_mode_decision);});
+
+
+//HELPFUL NOTE-why is this automatically firing? because you must have a function called after the event handler is called for it to work
+reset_button.addEventListener('click', function func() {reset_game(); box_creator();});
+
+
+//HELPFUL NOTE 3- Only returned items will be stored inside of an iffy function- not even vars are stored
+return {
+    displayMessage,
+    game_boxes_arr,
+    pone_ptwo_button,
+    player_comp_button,
+    game_mode_decision,
+    item_storage,
+    letter_switch_arr,
+    reset_game,
+    box_tbody,
+    box_creator,
+    box_table,
+    num,
+    stop_game
+    }
+
+})();
+
+
+
+
+
+
+
+
+
+
+
+//Factory Function 2 when user hits yes make that letter umovable until the end of the game 
+//Change to player 2 (or computer letter)
+//take into account which block has been filled
+//change the display text per turn (in two player mode)
+//decide which object gets created as per the game decision varible (player 2 or computer)
+const game_logic=()=>{
+    console.log(game_container.game_boxes_arr);
+    const game_boxes_arr=game_container.game_boxes_arr; 
+    //the td that has been clicked put into an array so it can be compared below
+    const item_storage=game_container.item_storage;
+    //check to see if the td in item storage is in the game boxes array, if so remove it from that array so it cannot be clicked anymore when the interaction function is called
+    let removed_item=item_storage.pop();
+
+    //make object not clickable take it out of the td box's array/ this works because this box is no longer in the array when o is called
+     if (game_boxes_arr.includes(removed_item)) {
+        let location_oferaseditem=game_boxes_arr.indexOf(removed_item);
+        game_boxes_arr.splice(location_oferaseditem,1);
+        //makes sure that the object is unselectable-the dom will just say what the display message says underneath here
+        removed_item.addEventListener('click', function() {game_container.displayMessage.innerHTML="It's "+ game_container.letter_switch_arr[0]+ "'s Turn!";});
+        //put the removed item back in the item container so I can know what blocks have been filled
+        game_container.item_storage.push(removed_item);         
+    } 
+
+     if(game_container.game_mode_decision==1){
+        //Toggle between X and O when a user hits the yes button! PLAYER 1 v PLAYER 2 ONLY
+        player_interaction(game_container.letter_switch_arr[1]);
+        //Switches to the next letter
+        const shifted_arr=game_container.letter_switch_arr.shift();
+        game_container.letter_switch_arr.push(shifted_arr);
+    }
+
+    let diagonal_checker=null;
+    //Below code decides who is the winner (winning combinations and such) BOTH MODES
+    if (item_storage.includes( document.querySelector('#box1'))
+        && item_storage.includes( document.querySelector('#box2')) 
+        && item_storage.includes( document.querySelector('#box3'))) {
+
+            if ( document.querySelector('#box1').innerHTML==document.querySelector('#box2').innerHTML
+                &&  document.querySelector('#box1').innerHTML==document.querySelector('#box3').innerHTML) {
+                    console.log(game_container.item_storage);
+                    console.log('1');
+                    game_container.stop_game=true;
+                    game_container.displayMessage.innerHTML=document.querySelector('#box1').innerHTML+' Wins!';
+                    function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);        
+                }                         
+    }
+
+    if (item_storage.includes( document.querySelector('#box4'))
+        && item_storage.includes( document.querySelector('#box5')) 
+        && item_storage.includes( document.querySelector('#box6'))) {
+
+            if ( document.querySelector('#box4').innerHTML==document.querySelector('#box5').innerHTML
+                &&  document.querySelector('#box4').innerHTML==document.querySelector('#box6').innerHTML) {
+                    console.log(game_container.item_storage);
+                    console.log('2');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box4').innerHTML+' Wins!';
+                    function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+     if (item_storage.includes( document.querySelector('#box7'))
+        && item_storage.includes( document.querySelector('#box8')) 
+        && item_storage.includes( document.querySelector('#box9'))) {
+
+            if ( document.querySelector('#box7').innerHTML==document.querySelector('#box8').innerHTML
+                &&  document.querySelector('#box7').innerHTML==document.querySelector('#box9').innerHTML) {
+                    console.log(game_container.item_storage);
+                    console.log('3');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box7').innerHTML+' Wins!';
+                    function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+     if (item_storage.includes( document.querySelector('#box1'))
+        && item_storage.includes( document.querySelector('#box4')) 
+        && item_storage.includes( document.querySelector('#box7'))) {
+
+            if ( document.querySelector('#box1').innerHTML==document.querySelector('#box4').innerHTML
+                &&  document.querySelector('#box1').innerHTML==document.querySelector('#box7').innerHTML) {
+                    console.log(game_container.item_storage);
+                    console.log('4');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box1').innerHTML+' Wins!';
+                   function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+     if (item_storage.includes( document.querySelector('#box2'))
+        && item_storage.includes( document.querySelector('#box5')) 
+        && item_storage.includes( document.querySelector('#box8'))) {
+
+            if ( document.querySelector('#box2').innerHTML==document.querySelector('#box5').innerHTML
+                &&  document.querySelector('#box2').innerHTML==document.querySelector('#box8').innerHTML) {
+                    console.log(game_container.item_storage);
+                    console.log('5');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box2').innerHTML+' Wins!';
+function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+     if (item_storage.includes( document.querySelector('#box3'))
+        && item_storage.includes( document.querySelector('#box6')) 
+        && item_storage.includes( document.querySelector('#box9'))) {
+
+            if ( document.querySelector('#box3').innerHTML==document.querySelector('#box6').innerHTML
+                &&  document.querySelector('#box3').innerHTML==document.querySelector('#box9').innerHTML) {
+                    console.log(game_container.item_storage);
+                    console.log('6');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box3').innerHTML+' Wins!';
+function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+    
+    if (item_storage.includes( document.querySelector('#box1'))
+        && item_storage.includes( document.querySelector('#box5')) 
+        && item_storage.includes( document.querySelector('#box9'))) {
+
+            if ( document.querySelector('#box1').innerHTML==document.querySelector('#box5').innerHTML
+                &&  document.querySelector('#box1').innerHTML==document.querySelector('#box9').innerHTML) {
+                    diagonal_checker=7;
+                    console.log(game_container.item_storage);
+                    console.log('7');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box1').innerHTML+' Wins!';
+function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+    if (item_storage.includes( document.querySelector('#box3'))
+        && item_storage.includes( document.querySelector('#box5')) 
+        && item_storage.includes( document.querySelector('#box7'))) {
+
+            if ( document.querySelector('#box3').innerHTML==document.querySelector('#box5').innerHTML
+                &&  document.querySelector('#box3').innerHTML==document.querySelector('#box7').innerHTML) {
+                    diagonal_checker=8;
+                    console.log(game_container.item_storage);
+                    console.log('8');
+                    console.log(game_container.stop_game);
+    
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+                    game_container.displayMessage.innerHTML=document.querySelector('#box3').innerHTML+' Wins!';
+function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+                 }
+    }
+
+
+    if (item_storage.length==9 && diagonal_checker==null){
+                    console.log('Its a Tie!');
+                    game_container.displayMessage.innerHTML="It"+'s'+" a Tie!";
+                    console.log(game_container.item_storage);
+                    diagonal_checker=null;
+                    console.log(game_container.stop_game);
+                    game_container.stop_game=true;
+                    console.log(game_container.stop_game);
+    
+function event_toggle() {game_container.reset_game(); game_container.box_creator(); game_container.box_table.removeEventListener('click', event_toggle); };
+                    game_container.box_table.addEventListener('click',event_toggle);
+
+    }
+
+  
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Factory Function 1 (interaction)   
+const player_interaction=(icon)=>{
+    console.log(game_container.game_boxes_arr);
+    const _reveal_icon=(item)=>{
+        
+        item.addEventListener('click', function create_icon() {
+            
+            //This creates the buttons for placement confimation
+            const yes_button=document.createElement('button');
+            const no_button=document.createElement('button');
+            yes_button.setAttribute('style','font-family:sans-serif; font-size:1em; width:4em; height:2.5em; margin-left:0.3em; margin-right:1em;');
+            no_button.setAttribute('style','font-family:sans-serif; font-size:1em; width:4em; height:2.5em; margin-right:3em;');
+            yes_button.innerText="Yes";
+            no_button.innerText="No";
+            game_container.displayMessage.innerText="Do you want to place?";
+            game_container.displayMessage.appendChild(yes_button);
+            game_container.displayMessage.appendChild(no_button);
+            
+            //This sets the box to X or O
+            this.innerHTML=icon;
+            this.setAttribute('style','font-family:sans-serif; font-size:8em; box-sizing:border-box; padding-left:0.16em; width:128.656px; height:128.656px; background-color:red;');
+            
+
+            //Resets the dom if you press no
+            no_button.addEventListener('click', function remove_display() {
+                game_container.displayMessage.innerHTML="It's "+icon+"'s turn!";
+                item.innerHTML='';
+        
+            });
+            
+            //IF P V C is selected go to Comp obj
+            yes_button.addEventListener('click', function game_logic_activation() {
+                //Access the game container object (item_storage array) and push the td (box that has been clicked) into the empty array 
+                  game_container.item_storage.push(item); 
+                  
+                  if (game_container.game_mode_decision==1){
+                  let letter_in_use="It's "+ game_container.letter_switch_arr[1]+ "'s Turn!";
+                  game_container.displayMessage.innerHTML=letter_in_use; 
+                    }
+                  
+                  game_logic(); 
+                  
+                  
+                  if (game_container.stop_game==false && game_container.game_mode_decision==2){
+                    let letter_in_use="It's "+ game_container.letter_switch_arr[1]+ "'s Turn!";
+                  game_container.displayMessage.innerHTML=letter_in_use; 
+                  computer_logic();
+                  }
+
+
+                  if (game_container.stop_game==true){ console.log('apple'); game_container.stop_game=false; }
+                  });
+    
+    }); 
+    
+    }       
+
+    game_container.game_boxes_arr.forEach(_reveal_icon);
+
+    return{icon};
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Factory Function 4
+const computer_logic= ()=> {
+
+    function main_logic() { 
+         
+         //loop through boxes check for x, whatever spot is not filled place the o their randomly
+         console.log(game_container.game_boxes_arr);
+         game_container.game_boxes_arr.sort(function () {return 0.5-Math.random();});
+         game_container.game_boxes_arr[0].innerHTML=game_container.letter_switch_arr[1];
+
+         game_container.item_storage.push(game_container.game_boxes_arr[0]);
+
+         let letter_in_use="It's "+ game_container.letter_switch_arr[0]+ "'s Turn!";
+         game_container.displayMessage.innerHTML=letter_in_use;
+         
+         game_logic();
+         console.log(game_container.game_boxes_arr);
+         
+    
+    if (game_container.stop_game==false){
+        player_interaction(game_container.letter_switch_arr[0]);
+        
+}
+
+}
+    //make the o or x place slowly
+    const comp_logic=setTimeout(main_logic,1140);
+    console.log('sfafssa');
+    
+}
+
+
+</script>
+</body>
+</html>
